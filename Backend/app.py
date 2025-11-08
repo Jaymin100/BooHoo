@@ -163,7 +163,7 @@ def room_exists():
 
 @app.route('/api/start_game/<room_code>', methods=['POST'])
 def start_game(room_code):
-
+    """Changes the status to playing"""
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -176,7 +176,7 @@ def start_game(room_code):
 
 @app.route('/api/costumes/<room_code>', methods=['GET'])
 def get_costumes(room_code):
-   
+    """Sends the list of costumes to the frontend"""
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
