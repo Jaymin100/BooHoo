@@ -232,7 +232,7 @@ def costume_image():
 
 @app.route('/api/leaderboard/<room_code>', methods=['GET'])
 def get_leaderboard(room_code):
-    
+    """Builds the leaderboard and send it to the frontend"""
     # Check room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
