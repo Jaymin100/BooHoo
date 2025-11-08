@@ -115,11 +115,10 @@ def room_exists():
 def upload_image():
     data = request.get_json()
     img_b64 = data['image']  # this is your base64 string from JS
-    img_bytes = base64.b64decode(img_b64)
 
     # Save to file
     with open('uploaded_image.png', 'wb') as f:
-        f.write(img_bytes)
+        f.write(img_b64)
 
     return {"status": "success"}
 
