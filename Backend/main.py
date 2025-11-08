@@ -32,3 +32,21 @@ class leaderboardOBJ:
         self.vote_amt = vote_amt
         self.player_id = player_id
         self.name = name
+
+
+def generate_room_code():
+    """Generate a 6-digit room code"""
+    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+# Storage
+games = {}
+
+def create_room():
+    room_code = generate_room_code()
+    games[room_code] = {
+        "room_code": room_code,
+        "status": "waiting",
+        "players": {},
+        "costumes": []
+    }
+    return room_code
