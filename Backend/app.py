@@ -25,6 +25,7 @@ def generate_room_code():
 
 @app.route('/api/create_room', methods=['POST'])
 def create_room():
+    """Generates the room code and store it in storage."""
     room_code = generate_room_code()
     
     # CREATE THE ROOM IN STORAGE!
@@ -41,6 +42,7 @@ def create_room():
 #expects user in phase 2
 @app.route('/api/join', methods=['POST'])
 def join_room():
+    """Logic to have the player join a precreated room."""
     data = request.get_json()
     
     # 1. Extract room_code, player_name from data
@@ -105,7 +107,7 @@ def debug_page():
         </style>
     </head>
     <body>
-        <h1>🎮 Games Debug View</h1>
+        <h1>Games Debug View</h1>
         <div class="info">View all active games/rooms in memory</div>
         <button onclick="location.reload()">Refresh</button>
         <button onclick="fetch('/api/debug/rooms').then(r => r.json()).then(d => { document.getElementById('data').textContent = JSON.stringify(d, null, 2); })">Load Data</button>
@@ -128,27 +130,62 @@ def debug_page():
 
 @app.route('/api/room/<room_code>', methods=['GET'])
 def get_room(room_code):
+    """Logic to see if room code entered exsists and if not returns and error
+    of Room not found"""
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     
-    return jsonify({  # ← Add the opening brace!
+    room = games[room_code]
+    
+    # Convert players dict to list
+    players_list = []
+    for player_id, player_data in room['players'].items():
+        players_list.append({
+            'player_id': player_id,
+            'name': player_data['name'],
+            'costume_uploaded': player_data['costume_uploaded']
+        })
+    
+    return jsonify({
         'room_code': room_code,
-        'status': games[room_code]['status'],
-        'players': games[room_code]['players']
+        'status': room['status'],
+        'players': players_list
     })
 
 @app.route('/api/verifiy',  methods=['POST'])
 def room_exists():
+    """Same as get_room"""
     data = request.get_json()
     room_code = data['room_code']
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     return jsonify({'success': True})
 
+@app.route('/api/start_game/<room_code>', methods=['POST'])
+def start_game(room_code):
 
+    # Check if room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    # Change status to playing
+    games[room_code]['status'] = 'playing'
+    
+    # Return success
+    return jsonify({'success': True})
+
+@app.route('/api/costumes/<room_code>', methods=['GET'])
+def get_costumes(room_code):
+   
+    # Check if room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    return jsonify({'costumes': games[room_code]['costumes']})
 
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
+    """Revices the base64 of the img from the frontend"""
     data = request.get_json()
     img_b64 = data['image']  # this is your base64 string from JS
 
