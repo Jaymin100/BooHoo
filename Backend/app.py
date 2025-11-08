@@ -133,8 +133,10 @@ def get_room(room_code):
     3. Format the players dictionary into a list
     4. Return JSON
     """
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
     
-    pass
+    return jsonify('room_code': room_code)
 
 @app.route('/api/verifiy',  methods=['POST'])
 def room_exists():
