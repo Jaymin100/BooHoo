@@ -1,44 +1,8 @@
-import random as rd
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import random
+import random as rd
 import uuid
 import os
-import base64
-
-class playerOBJ:
-    def __init__(self, player_id, name, score=0, connected=False):
-        self.player_id = player_id
-        self.name = name
-        self.score = score
-        self.connected = connected
-               
-class roomOBJ:
-    def __init__(self, status='waiting', costume_queue={}, player_id='', room_id='', players_in_room={}):
-        self.room_id = room_id
-        self.player_id = player_id
-        self.status = status
-        self.costume_queue = costume_queue
-        self.players_in_room = players_in_room
-          
-    def room_id(self):
-        if self.player_id == 0:
-            for i in range(6):
-                random_str = str(rd.randint(0, 9))
-                self.room_id += random_str
-                       
-class costumeOBJ:
-    def __init__(self, costume_id, image_url):
-        self.costume_id = costume_id
-        self.image_url = image_url
-    
-class leaderboardOBJ:
-    def __init__(self, vote_amt, player_id, name):
-        self.vote_amt = vote_amt
-        self.player_id = player_id
-        self.name = name
-
-
 
 
 app = Flask(__name__)
@@ -53,10 +17,10 @@ games = {}
 
 def generate_room_code():
     """Generate a 6-digit room code"""
-    code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     # Make sure it's unique
     while code in games:
-        code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     return code
 
 @app.route('/api/create_room', methods=['POST'])
@@ -73,6 +37,7 @@ def create_room():
     
     return jsonify({'success': True, 'room_code': room_code})
 
+#expects user in phase 2
 @app.route('/api/join', methods=['POST'])
 def join_room():
     data = request.get_json()
@@ -95,6 +60,7 @@ def join_room():
         "costume_uploaded": False,  # Changed to False since we're not saving images yet
         "has_finished_voting": False
     }
+
     
     # 5. For now, skip image saving, but add a placeholder costume
     costume_id = str(uuid.uuid4())
@@ -104,12 +70,58 @@ def join_room():
         "filename": "",  # Empty for now
         "votes": 0
     })
-    
+
     # 6. Return success
     return jsonify({
         'success': True,
         'player_id': player_id
     })
 
+@app.route('/api/debug/rooms', methods=['GET'])
+def debug_games():
+    """Shows all games in memory - useful for debugging"""
+    return jsonify(games)
+
+@app.route('/api/room/<room_code>', methods=['GET'])
+def get_room(room_code):
+    """
+    Get information about a room.
+    
+    Returns:
+    - room_code
+    - status
+    - list of players
+    
+    YOUR TASK:
+    1. Check if room exists - return 404 if not
+    2. Get the room data from games[room_code]
+    3. Format the players dictionary into a list
+    4. Return JSON
+    """
+    
+    pass
+
+@app.route('/api/verifiy',  methods=['POST'])
+def room_exists():
+    data = request.get_json()
+    room_code = data['room_code']
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    return jsonify({'success': True})
+
+
+
+@app.route('/api/upload', methods=['POST'])
+def costume_image():
+    data = request.get_json()
+    img_b64 = data['image']  # this is your base64 string from JS
+
+    # Save to file
+    with open('uploaded_image.png', 'wb') as f:
+        f.write(img_b64)
+
+    return {"status": "success"}
+
+    
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
