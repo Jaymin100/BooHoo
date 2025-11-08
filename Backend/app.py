@@ -130,21 +130,10 @@ def get_room(room_code):
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     
-    room = games[room_code]
-    
-    # Convert players dict to list
-    players_list = []
-    for player_id, player_data in room['players'].items():
-        players_list.append({
-            'player_id': player_id,
-            'name': player_data['name'],
-            'costume_uploaded': player_data['costume_uploaded']
-        })
-    
-    return jsonify({
+    return jsonify({  # ← Add the opening brace!
         'room_code': room_code,
-        'status': room['status'],
-        'players': players_list
+        'status': games[room_code]['status'],
+        'players': games[room_code]['players']
     })
 
 @app.route('/api/verifiy',  methods=['POST'])
@@ -162,11 +151,7 @@ def costume_image():
     data = request.get_json()
     img_b64 = data['image']  # this is your base64 string from JS
 
-    # Save to file
-    with open('uploaded_image.png', 'wb') as f:
-        f.write(img_b64)
-
-    return {"status": "success"}
+    return {"status": "success"}, img_b64
 
     
 if __name__ == '__main__':
