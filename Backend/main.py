@@ -8,7 +8,7 @@ class playerOBJ:
         self.connected = connected
                
 class roomOBJ:
-    def __init__(self, status, costume_queue={}, player_id='', room_id='', players_in_room={}):
+    def __init__(self, status='waiting', costume_queue={}, player_id='', room_id='', players_in_room={}):
         self.room_id = room_id
         self.player_id = player_id
         self.status = status
