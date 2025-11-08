@@ -100,7 +100,7 @@ out/
 
 # Gatsby
 .cache/
-public
+# Note: public folder is needed for React apps, so it's not ignored
 
 # Storybook
 .out
