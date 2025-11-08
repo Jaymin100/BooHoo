@@ -3,7 +3,7 @@ from flask_cors import CORS
 import random as rd
 import uuid
 import os
-import base64
+
 
 app = Flask(__name__)
 CORS(app)
