@@ -67,7 +67,6 @@ def join_room():
         "has_finished_voting": False
     }
 
-    
     # 5. For now, skip image saving, but add a placeholder costume
     costume_id = str(uuid.uuid4())
     games[room_code]['costumes'].append({
