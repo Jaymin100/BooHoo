@@ -105,7 +105,18 @@ def room_exists():
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     return jsonify({'success': True})
 
+@app.route('/api/start_game/<room_code>', methods=['POST'])
+def start_game(room_code):
 
+    # Check if room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    # Change status to playing
+    games[room_code]['status'] = 'playing'
+    
+    # Return success
+    return jsonify({'success': True})
 
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
