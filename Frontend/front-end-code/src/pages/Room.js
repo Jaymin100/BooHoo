@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Waiting from '../RoomComp/Waiting';
 import Playing from '../RoomComp/Playing';
@@ -13,6 +13,16 @@ function Room() {
   const [roomStatus, setRoomStatus] = useState('waiting'); // Default to 'waiting'
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const isFinishedRef = useRef(false); // Track if we've reached finished state
+  const roomStatusRef = useRef('waiting'); // Track current status in ref
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    roomStatusRef.current = roomStatus;
+    if (roomStatus === 'finished') {
+      isFinishedRef.current = true;
+    }
+  }, [roomStatus]);
 
   // Fetch room status from backend
   useEffect(() => {
@@ -21,8 +31,16 @@ function Room() {
       return;
     }
 
+    // Reset finished ref when room code changes
+    isFinishedRef.current = false;
+
     // Fetch room data to get status
     const fetchRoomStatus = async () => {
+      // Don't poll if we're already in finished state
+      if (isFinishedRef.current) {
+        return;
+      }
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/room/${roomCode}`, {
           headers: {
@@ -31,13 +49,33 @@ function Room() {
         });
         if (response.ok) {
           const data = await response.json();
-          setRoomStatus(data.status || 'waiting');
+          const newStatus = data.status || 'waiting';
+          setRoomStatus(newStatus);
+          
+          // If status is finished, mark it and stop polling
+          if (newStatus === 'finished') {
+            isFinishedRef.current = true;
+          }
         } else {
-          // If room not found, default to waiting
+          // If room not found and we're already in finished state, keep it
+          // (room is deleted after leaderboard is fetched)
+          if (isFinishedRef.current || roomStatusRef.current === 'finished') {
+            // Keep finished status - room was deleted after leaderboard was fetched
+            setRoomStatus('finished');
+            isFinishedRef.current = true;
+            return;
+          }
+          // Otherwise, default to waiting (room doesn't exist yet or was deleted)
           setRoomStatus('waiting');
         }
       } catch (error) {
         console.error('Error fetching room status:', error);
+        // If we're already finished, don't change status on error
+        if (isFinishedRef.current || roomStatusRef.current === 'finished') {
+          setRoomStatus('finished');
+          isFinishedRef.current = true;
+          return;
+        }
         // Default to waiting on error
         setRoomStatus('waiting');
       } finally {
@@ -48,8 +86,15 @@ function Room() {
     fetchRoomStatus();
 
     // Poll for status updates when game is playing or waiting
+    // Stop polling once the game is finished (room will be deleted after leaderboard fetch)
     // This allows automatic transition to 'finished' status when all players vote
-    const interval = setInterval(fetchRoomStatus, 2000);
+    const interval = setInterval(() => {
+      // Only poll if we haven't reached finished state
+      if (!isFinishedRef.current) {
+        fetchRoomStatus();
+      }
+    }, 2000);
+    
     return () => clearInterval(interval);
   }, [roomCode, navigate]);
 
