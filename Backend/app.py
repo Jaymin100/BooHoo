@@ -202,7 +202,7 @@ def get_costumes(room_code):
 
 @app.route('/api/submit_votes', methods=['POST'])
 def submit_votes():
-  
+    """Tracks who have voteded and add together votes per costume"""
     data = request.get_json()
     room_code = data['room_code']
     player_id = data['player_id']
