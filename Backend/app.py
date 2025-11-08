@@ -1,11 +1,34 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flasgger import Swagger
 import random as rd
 import uuid
 
 app = Flask(__name__)
 # Configure CORS to allow requests from ngrok and any origin
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Add Swagger configuration
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'apispec',
+            "route": '/apispec.json',
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/api/docs"  # Access Swagger UI at /api/docs
+}
+
+swagger = Swagger(app, config=swagger_config, template={
+    "info": {
+        "title": "Halloween Costume Rating API",
+        "description": "API for Tinder-style costume rating game - Players join rooms, upload costumes, and vote on each other's costumes",
+        "version": "1.0.0"
+    }
+})
 
 # In-memory storage
 games = {}
@@ -20,7 +43,24 @@ def generate_room_code():
 
 @app.route('/api/create_room', methods=['POST'])
 def create_room():
-    """Generates the room code and store it in storage."""
+    """
+    Create a new game room
+    ---
+    tags:
+      - Room Management
+    responses:
+      200:
+        description: Room created successfully
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: true
+            room_code:
+              type: string
+              example: "123456"
+              description: 6-digit room code
+    """
     room_code = generate_room_code()
     
     # CREATE THE ROOM IN STORAGE!
@@ -34,10 +74,60 @@ def create_room():
     
     return jsonify({'success': True, 'room_code': room_code})
 
-#expects user in phase 2
 @app.route('/api/join', methods=['POST'])
 def join_room():
-    """Logic to have the player join a precreated room."""
+    """
+    Player joins a room with name and optional costume image
+    ---
+    tags:
+      - Player Actions
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          required:
+            - room_code
+            - player_name
+          properties:
+            room_code:
+              type: string
+              example: "123456"
+              description: 6-digit room code
+            player_name:
+              type: string
+              example: "Alice"
+              description: Player's display name
+            image_data:
+              type: string
+              description: Base64 encoded costume image (optional)
+    responses:
+      200:
+        description: Player joined successfully
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: true
+            player_id:
+              type: string
+              example: "550e8400-e29b-41d4-a716-446655440000"
+              description: Unique player identifier
+            is_host:
+              type: boolean
+              example: true
+              description: Whether this player is the room host
+      404:
+        description: Room not found
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Room not found"
+    """
     data = request.get_json()
     
     # 1. Extract room_code, player_name from data
@@ -53,19 +143,17 @@ def join_room():
     player_id = str(uuid.uuid4())
     
     # 4. Check if this is the first player (host) - set host_id if empty
-    # This must be done BEFORE adding the player to avoid race conditions
     is_host = False
     if games[room_code]['host_id'] == '':
         games[room_code]['host_id'] = player_id
         is_host = True
     else:
-        # Check if this player is already the host (shouldn't happen but just in case)
         is_host = games[room_code]['host_id'] == player_id
 
     # 5. Add player to games[room_code]['players']
     games[room_code]['players'][player_id] = {
         "name": player_name,
-        "costume_uploaded": image_data is not None,  # True if image was provided
+        "costume_uploaded": image_data is not None,
         "has_finished_voting": False
     }
 
@@ -74,13 +162,12 @@ def join_room():
     games[room_code]['costumes'].append({
         "costume_id": costume_id,
         "player_id": player_id,
-        "filename": "",  # Empty for now
+        "filename": "",
         "votes": 0,
         "image_data": image_data if image_data else ""
     })
 
-    # 7. Double-check host status (should already be set above, but verify)
-    # This ensures we return the correct host status
+    # 7. Double-check host status
     final_is_host = games[room_code]['host_id'] == player_id
     
     # 8. Return success with host status
@@ -92,12 +179,31 @@ def join_room():
 
 @app.route('/api/debug/rooms', methods=['GET'])
 def debug_games():
-    """Shows all games in memory - useful for debugging"""
+    """
+    Debug endpoint - View all rooms in memory
+    ---
+    tags:
+      - Debug
+    responses:
+      200:
+        description: All games/rooms currently in memory
+        schema:
+          type: object
+          description: Dictionary of all rooms with their data
+    """
     return jsonify(games)
 
 @app.route('/debug', methods=['GET'])
 def debug_page():
-    """Simple HTML page to view games in a readable format"""
+    """
+    Debug page - HTML interface to view all rooms
+    ---
+    tags:
+      - Debug
+    responses:
+      200:
+        description: HTML page displaying all rooms
+    """
     html = """
     <!DOCTYPE html>
     <html>
@@ -135,8 +241,49 @@ def debug_page():
 
 @app.route('/api/room/<room_code>', methods=['GET'])
 def get_room(room_code):
-    """Logic to see if room code entered exsists and if not returns and error
-    of Room not found"""
+    """
+    Get room information including players and status
+    ---
+    tags:
+      - Room Management
+    parameters:
+      - in: path
+        name: room_code
+        required: true
+        schema:
+          type: string
+        description: 6-digit room code
+        example: "123456"
+    responses:
+      200:
+        description: Room information retrieved successfully
+        schema:
+          properties:
+            room_code:
+              type: string
+              example: "123456"
+            status:
+              type: string
+              example: "waiting"
+              description: Room status (waiting, playing, finished)
+            host_id:
+              type: string
+              example: "550e8400-e29b-41d4-a716-446655440000"
+              description: Player ID of the room host
+            players:
+              type: array
+              items:
+                type: object
+                properties:
+                  player_id:
+                    type: string
+                  name:
+                    type: string
+                  costume_uploaded:
+                    type: boolean
+      404:
+        description: Room not found
+    """
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     
@@ -160,7 +307,42 @@ def get_room(room_code):
 
 @app.route('/api/verifiy',  methods=['POST'])
 def room_exists():
-    """Same as get_room"""
+    """
+    Verify if a room exists
+    ---
+    tags:
+      - Room Management
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          required:
+            - room_code
+          properties:
+            room_code:
+              type: string
+              example: "123456"
+              description: 6-digit room code to verify
+    responses:
+      200:
+        description: Room exists
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: true
+      404:
+        description: Room not found
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Room not found"
+    """
     data = request.get_json()
     room_code = data['room_code']
     if room_code not in games:
@@ -169,7 +351,30 @@ def room_exists():
 
 @app.route('/api/start_game/<room_code>', methods=['POST'])
 def start_game(room_code):
-    """Changes the status to playing"""
+    """
+    Host starts the game (changes status to 'playing')
+    ---
+    tags:
+      - Game Flow
+    parameters:
+      - in: path
+        name: room_code
+        required: true
+        schema:
+          type: string
+        description: 6-digit room code
+        example: "123456"
+    responses:
+      200:
+        description: Game started successfully
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: true
+      404:
+        description: Room not found
+    """
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -182,7 +387,44 @@ def start_game(room_code):
 
 @app.route('/api/costumes/<room_code>', methods=['GET'])
 def get_costumes(room_code):
-    """Get all costumes for a room, including player names"""
+    """
+    Get all costumes in a room with player names for voting
+    ---
+    tags:
+      - Game Flow
+    parameters:
+      - in: path
+        name: room_code
+        required: true
+        schema:
+          type: string
+        description: 6-digit room code
+        example: "123456"
+    responses:
+      200:
+        description: List of all costumes
+        schema:
+          properties:
+            costumes:
+              type: array
+              items:
+                type: object
+                properties:
+                  costume_id:
+                    type: string
+                  player_id:
+                    type: string
+                  player_name:
+                    type: string
+                  filename:
+                    type: string
+                  votes:
+                    type: integer
+                  image_data:
+                    type: string
+      404:
+        description: Room not found
+    """
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -208,7 +450,48 @@ def get_costumes(room_code):
 
 @app.route('/api/submit_votes', methods=['POST'])
 def submit_votes():
-    """Tracks who have voteded and add together votes per costume"""
+    """
+    Submit votes for costumes
+    ---
+    tags:
+      - Game Flow
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          required:
+            - room_code
+            - player_id
+            - votes
+          properties:
+            room_code:
+              type: string
+              example: "123456"
+              description: 6-digit room code
+            player_id:
+              type: string
+              example: "550e8400-e29b-41d4-a716-446655440000"
+              description: Player's unique ID
+            votes:
+              type: object
+              example: {"costume-id-1": 1, "costume-id-2": 0, "costume-id-3": 1}
+              description: Dictionary mapping costume IDs to votes (1=like, 0=skip)
+    responses:
+      200:
+        description: Votes submitted successfully
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: true
+            all_finished:
+              type: boolean
+              example: false
+              description: Whether all players have finished voting
+      404:
+        description: Room not found
+    """
     data = request.get_json()
     room_code = data['room_code']
     player_id = data['player_id']
@@ -219,7 +502,6 @@ def submit_votes():
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     
     # Loop through each costume and update votes
-    # votes is like: {"costume-id-1": 1, "costume-id-2": 0, "costume-id-3": 1}
     for costume in games[room_code]['costumes']:
         costume_id = costume['costume_id']
         if costume_id in votes:
@@ -242,7 +524,31 @@ def submit_votes():
 
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
-    """Revices the base64 of the img from the frontend"""
+    """
+    Upload costume image (receives base64 encoded image)
+    ---
+    tags:
+      - Player Actions
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          required:
+            - image
+          properties:
+            image:
+              type: string
+              description: Base64 encoded image data
+    responses:
+      200:
+        description: Image uploaded successfully
+        schema:
+          properties:
+            status:
+              type: string
+              example: "success"
+    """
     data = request.get_json()
     img_b64 = data['image']  # this is your base64 string from JS
 
@@ -250,7 +556,41 @@ def costume_image():
 
 @app.route('/api/leaderboard/<room_code>', methods=['GET'])
 def get_leaderboard(room_code):
-    """Builds the leaderboard and send it to the frontend"""
+    """
+    Get final leaderboard sorted by votes (highest first)
+    ---
+    tags:
+      - Game Flow
+    parameters:
+      - in: path
+        name: room_code
+        required: true
+        schema:
+          type: string
+        description: 6-digit room code
+        example: "123456"
+    responses:
+      200:
+        description: Leaderboard with all players sorted by votes
+        schema:
+          properties:
+            leaderboard:
+              type: array
+              items:
+                type: object
+                properties:
+                  player_id:
+                    type: string
+                  player_name:
+                    type: string
+                  votes:
+                    type: integer
+                  image_data:
+                    type: string
+                    description: Base64 encoded costume image
+      404:
+        description: Room not found
+    """
     # Check room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -259,7 +599,6 @@ def get_leaderboard(room_code):
     leaderboard = []
     
     # Build leaderboard with image_data included
-    # Loop through costumes, for each costume find the player's name and image
     for costume in room['costumes']:
         player_id = costume['player_id']
         player_name = room['players'][player_id]['name']
@@ -279,8 +618,30 @@ def get_leaderboard(room_code):
 
 @app.route('/api/delete_room/<room_code>', methods=['DELETE'])
 def delete_room(room_code):
-    """Delete a room from memory."""
-    
+    """
+    Delete a room from memory
+    ---
+    tags:
+      - Room Management
+    parameters:
+      - in: path
+        name: room_code
+        required: true
+        schema:
+          type: string
+        description: 6-digit room code to delete
+        example: "123456"
+    responses:
+      200:
+        description: Room deleted successfully
+        schema:
+          properties:
+            success:
+              type: boolean
+              example: true
+      404:
+        description: Room not found
+    """
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -289,6 +650,7 @@ def delete_room(room_code):
     del games[room_code]
     
     return jsonify({'success': True})
+
 if __name__ == '__main__':
     # Run on all interfaces (0.0.0.0) to allow ngrok to connect
     app.run(debug=True, host='0.0.0.0', port=5000)
