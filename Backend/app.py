@@ -233,6 +233,32 @@ def costume_image():
 
     return {"status": "success"}, img_b64
 
+@app.route('/api/leaderboard/<room_code>', methods=['GET'])
+def get_leaderboard(room_code):
     
+    # Check room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    room = games[room_code]
+    leaderboard = []
+    
+    # Build leaderboard
+    # Hint: Loop through costumes, for each costume find the player's name
+    for costume in room['costumes']:
+        player_id = costume['player_id']
+        player_name = room['players'][player_id]['name']
+        
+        leaderboard.append({
+            'player_id': player_id,
+            'player_name': player_name,
+            'votes': costume['votes']
+        })
+    
+    # Sort by votes (highest first)
+    leaderboard = sorted(leaderboard, key=lambda x: x['votes'], reverse=True)
+    
+    return jsonify({'leaderboard': leaderboard})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
