@@ -257,5 +257,17 @@ def get_leaderboard(room_code):
     
     return jsonify({'leaderboard': leaderboard})
 
+@app.route('/api/delete_room/<room_code>', methods=['DELETE'])
+def delete_room(room_code):
+    """Delete a room from memory."""
+    
+    # Check if room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    # Delete the room
+    del games[room_code]
+    
+    return jsonify({'success': True})
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
