@@ -176,12 +176,29 @@ def start_game(room_code):
 
 @app.route('/api/costumes/<room_code>', methods=['GET'])
 def get_costumes(room_code):
-    """Sends the list of costumes to the frontend"""
+    """Get all costumes for a room, including player names"""
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     
-    return jsonify({'costumes': games[room_code]['costumes']})
+    room = games[room_code]
+    costumes_with_names = []
+    
+    # Loop through costumes and add player names
+    for costume in room['costumes']:
+        player_id = costume.get('player_id')
+        player_name = None
+        
+        # Get player name from players dict
+        if player_id and player_id in room['players']:
+            player_name = room['players'][player_id].get('name')
+        
+        # Create costume object with name
+        costume_with_name = costume.copy()
+        costume_with_name['player_name'] = player_name
+        costumes_with_names.append(costume_with_name)
+    
+    return jsonify({'costumes': costumes_with_names})
 
 @app.route('/api/submit_votes', methods=['POST'])
 def submit_votes():
