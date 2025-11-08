@@ -2,14 +2,9 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import random as rd
 import uuid
-import os
 
 app = Flask(__name__)
 CORS(app)
-
-# Configuration
-UPLOAD_FOLDER = './uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # In-memory storage
 games = {}
@@ -254,7 +249,7 @@ def costume_image():
 
 @app.route('/api/leaderboard/<room_code>', methods=['GET'])
 def get_leaderboard(room_code):
-    
+    """Builds the leaderboard and send it to the frontend"""
     # Check room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -281,5 +276,17 @@ def get_leaderboard(room_code):
     
     return jsonify({'leaderboard': leaderboard})
 
+@app.route('/api/delete_room/<room_code>', methods=['DELETE'])
+def delete_room(room_code):
+    """Delete a room from memory."""
+    
+    # Check if room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    # Delete the room
+    del games[room_code]
+    
+    return jsonify({'success': True})
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
