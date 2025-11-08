@@ -135,8 +135,17 @@ function JoinRoom() {
       const data = await response.json();
       
       if (response.ok && data.success) {
-        // Step 9: Navigate to room page after successful join
-        navigate(`/room?code=${roomCode}&player_id=${data.player_id}`);
+        // Step 9: Check if user is the host and navigate accordingly
+        const playerId = data.player_id;
+        const isHost = data.is_host || false;
+        console.log(isHost);
+        if (isHost) {
+          // User is the host - navigate to CreateRoom page
+          navigate(`/create-room?code=${roomCode}&player_id=${playerId}`);
+        } else {
+          // User is not the host - navigate to Room page (Waiting component)
+          navigate(`/room?code=${roomCode}&player_id=${playerId}`);
+        }
       } else {
         alert('Error: ' + (data.error || 'Failed to join room'));
       }

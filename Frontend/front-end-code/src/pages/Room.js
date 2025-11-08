@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Waiting from '../RoomComp/Waiting';
+import Playing from '../RoomComp/Playing';
 
 // Room page component - displays different components based on room status
 function Room() {
   const [searchParams] = useSearchParams();
   const roomCode = searchParams.get('code') || '';
+  const playerId = searchParams.get('player_id') || '';
   const [roomStatus, setRoomStatus] = useState('waiting'); // Default to 'waiting'
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -57,6 +59,11 @@ function Room() {
   // Default to Waiting component if status is 'waiting' or unknown
   if (roomStatus === 'waiting') {
     return <Waiting roomCode={roomCode} />;
+  }
+
+  // Show Playing component when status is 'playing'
+  if (roomStatus === 'playing') {
+    return <Playing roomCode={roomCode} playerId={playerId} />;
   }
 
   // Placeholder for other statuses (will be implemented later)
