@@ -71,7 +71,7 @@ def create_room():
         'costumes': []
     }
     
-    return jsonify({'room_code': room_code})
+    return jsonify({'success': True, 'room_code': room_code})
 
 @app.route('/api/join', methods=['POST'])
 def join_room():
@@ -110,3 +110,6 @@ def join_room():
         'success': True,
         'player_id': player_id
     })
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
