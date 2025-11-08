@@ -118,6 +118,30 @@ def start_game(room_code):
     # Return success
     return jsonify({'success': True})
 
+@app.route('/api/costumes/<room_code>', methods=['GET'])
+def get_costumes(room_code):
+    """
+    Get all costumes in a room for voting.
+    
+    Returns: {
+        "costumes": [
+            {
+                "costume_id": "uuid1",
+                "player_id": "uuid-player-1",
+                "filename": "image.jpg",
+                "votes": 0
+            },
+            ...
+        ]
+    }
+    
+    YOUR TASK:
+    1. Check if room exists
+    2. Return the costumes list from games[room_code]['costumes']
+    """
+
+    return jsonify(games[room_code]['costumes'])
+
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
     data = request.get_json()
