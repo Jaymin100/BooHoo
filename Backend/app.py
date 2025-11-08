@@ -4,7 +4,6 @@ import random as rd
 import uuid
 import os
 
-
 app = Flask(__name__)
 CORS(app)
 
@@ -16,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 games = {}
 
 def generate_room_code():
-    """Generate a 6-digit room code"""
+    """Generate a 6-digit random room code"""
     code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     # Make sure it's unique
     while code in games:
@@ -74,7 +73,6 @@ def join_room():
         "has_finished_voting": False
     }
 
-    
     # 6. Add costume entry
     costume_id = str(uuid.uuid4())
     games[room_code]['costumes'].append({
@@ -214,7 +212,7 @@ def get_costumes(room_code):
 
 @app.route('/api/submit_votes', methods=['POST'])
 def submit_votes():
-  
+    """Tracks who have voteded and add together votes per costume"""
     data = request.get_json()
     room_code = data['room_code']
     player_id = data['player_id']
@@ -231,7 +229,6 @@ def submit_votes():
         if costume_id in votes:
             costume['votes'] += votes[costume_id]
     
-    
     # Mark player as finished voting
     games[room_code]['players'][player_id]["has_finished_voting"] = True
     
@@ -245,6 +242,32 @@ def costume_image():
 
     return {"status": "success"}, img_b64
 
+@app.route('/api/leaderboard/<room_code>', methods=['GET'])
+def get_leaderboard(room_code):
     
+    # Check room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    room = games[room_code]
+    leaderboard = []
+    
+    # Build leaderboard
+    # Hint: Loop through costumes, for each costume find the player's name
+    for costume in room['costumes']:
+        player_id = costume['player_id']
+        player_name = room['players'][player_id]['name']
+        
+        leaderboard.append({
+            'player_id': player_id,
+            'player_name': player_name,
+            'votes': costume['votes']
+        })
+    
+    # Sort by votes (highest first)
+    leaderboard = sorted(leaderboard, key=lambda x: x['votes'], reverse=True)
+    
+    return jsonify({'leaderboard': leaderboard})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
