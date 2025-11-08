@@ -73,7 +73,8 @@ def join_room():
         "costume_id": costume_id,
         "player_id": player_id,
         "filename": "",  # Empty for now
-        "votes": 0
+        "votes": 0,
+        "image_data": image_data
     })
 
     # 6. Return success
