@@ -1,6 +1,6 @@
-import random as rd
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import random as rd
 import uuid
 import os
 import base64
@@ -52,10 +52,10 @@ games = {}
 
 def generate_room_code():
     """Generate a 6-digit room code"""
-    code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     # Make sure it's unique
     while code in games:
-        code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     return code
 
 @app.route('/api/create_room', methods=['POST'])
@@ -143,6 +143,21 @@ def room_exists():
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     return jsonify({'success': True})
+
+
+
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    data = request.get_json()
+    img_b64 = data['image']  # this is your base64 string from JS
+    img_bytes = base64.b64decode(img_b64)
+
+    # Save to file
+    with open('uploaded_image.png', 'wb') as f:
+        f.write(img_bytes)
+
+    return {"status": "success"}
+
     
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
