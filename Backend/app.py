@@ -183,6 +183,31 @@ def get_costumes(room_code):
     
     return jsonify({'costumes': games[room_code]['costumes']})
 
+@app.route('/api/submit_votes', methods=['POST'])
+def submit_votes():
+  
+    data = request.get_json()
+    room_code = data['room_code']
+    player_id = data['player_id']
+    votes = data['votes']  # Dictionary: {costume_id: score}
+    
+    # Check room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
+    # Loop through each costume and update votes
+    # votes is like: {"costume-id-1": 1, "costume-id-2": 0, "costume-id-3": 1}
+    for costume in games[room_code]['costumes']:
+        costume_id = costume['costume_id']
+        if costume_id in votes:
+            costume['votes'] += votes[costume_id]
+    
+    
+    # Mark player as finished voting
+    games[room_code]['players'][player_id]["has_finished_voting"] = True
+    
+    return jsonify({'success': True})
+
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
     """Revices the base64 of the img from the frontend"""
