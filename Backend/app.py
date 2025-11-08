@@ -16,7 +16,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 games = {}
 
 def generate_room_code():
-    """Generate a 6-digit room code"""
+    """Generate a 6-digit random room code"""
     code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     # Make sure it's unique
     while code in games:
