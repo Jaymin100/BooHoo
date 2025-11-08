@@ -273,7 +273,7 @@ function JoinRoom() {
               {/* File size info when file is selected */}
               {selectedFile && !fileError && fileSize && (
                 <p className="mt-2 text-xs text-orange-500">
-                  ✓ File selected: {selectedFile.name} ({formatFileSize(fileSize)}) - Ready to upload as base64
+                  ✓ File selected: {selectedFile.name} ({formatFileSize(fileSize)})
                 </p>
               )}
             </div>
