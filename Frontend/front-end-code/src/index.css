@@ -21,6 +21,20 @@
   }
 }
 
+/* Card swipe animations */
+@keyframes swipe-out-left {
+  to {
+    transform: translateX(-500px) translateY(100px) rotate(-30deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-out-right {
+  to {
+    transform: translateX(500px) translateY(100px) rotate(30deg);
+    opacity: 0;
+  }
+}
 
 /* Apply animations */
 .animate-float {
