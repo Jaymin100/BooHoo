@@ -181,7 +181,7 @@ def get_costumes(room_code):
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
     
-    return jsonify(games[room_code]['costumes'])
+    return jsonify({'costumes': games[room_code]['costumes']})
 
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
