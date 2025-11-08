@@ -116,11 +116,7 @@ def costume_image():
     data = request.get_json()
     img_b64 = data['image']  # this is your base64 string from JS
 
-    # Save to file
-    with open('uploaded_image.png', 'wb') as f:
-        f.write(img_b64)
-
-    return {"status": "success"}
+    return {"status": "success"}, img_b64
 
     
 if __name__ == '__main__':
