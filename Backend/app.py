@@ -2,10 +2,58 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import random as rd
 import uuid
+import html
+from collections import defaultdict
+from time import time
 
 app = Flask(__name__)
 # Configure CORS to allow requests from ngrok and any origin
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Rate limiting storage (in-memory)
+rate_limit_store = defaultdict(list)
+
+def rate_limit(max_requests=5, window_seconds=60):
+    """Rate limiting decorator"""
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            ip = request.remote_addr
+            now = time()
+            
+            # Clean old entries
+            rate_limit_store[ip] = [
+                req_time for req_time in rate_limit_store[ip]
+                if now - req_time < window_seconds
+            ]
+            
+            # Check rate limit
+            if len(rate_limit_store[ip]) >= max_requests:
+                return jsonify({
+                    'success': False,
+                    'error': 'Rate limit exceeded. Please try again later.'
+                }), 429
+            
+            # Record this request
+            rate_limit_store[ip].append(now)
+            
+            return f(*args, **kwargs)
+        wrapper.__name__ = f.__name__
+        return wrapper
+    return decorator
+
+# Security: Sanitize user input to prevent XSS
+def sanitize_input(text, max_length=12):
+    """Sanitize user input to prevent XSS attacks"""
+    if not isinstance(text, str):
+        return ""
+    # Remove leading/trailing whitespace
+    text = text.strip()
+    # Limit length to 12 characters
+    if len(text) > max_length:
+        text = text[:max_length]
+    # Escape HTML characters to prevent XSS
+    text = html.escape(text)
+    return text
 
 # In-memory storage
 games = {}
@@ -19,6 +67,7 @@ def generate_room_code():
     return code
 
 @app.route('/api/create_room', methods=['POST'])
+@rate_limit(max_requests=5, window_seconds=60)  # Limit to 5 room creations per minute
 def create_room():
     """Generates the room code and store it in storage."""
     room_code = generate_room_code()
@@ -41,9 +90,16 @@ def join_room():
     data = request.get_json()
     
     # 1. Extract room_code, player_name from data
-    room_code = data['room_code']
-    player_name = data['player_name']
+    room_code = data.get('room_code', '').strip()
+    player_name = data.get('player_name', '').strip()
     image_data = data.get('image_data', None)  # Make image_data optional
+    
+    # Security: Sanitize and limit player name to 12 characters, prevent XSS
+    player_name = sanitize_input(player_name, max_length=12)
+    
+    # Validate player name
+    if not player_name:
+        return jsonify({'success': False, 'error': 'Player name is required'}), 400
     
     # 2. Check if room exists
     if room_code not in games:
@@ -64,7 +120,7 @@ def join_room():
 
     # 5. Add player to games[room_code]['players']
     games[room_code]['players'][player_id] = {
-        "name": player_name,
+        "name": player_name,  # Already sanitized
         "costume_uploaded": image_data is not None,  # True if image was provided
         "has_finished_voting": False
     }
@@ -147,7 +203,7 @@ def get_room(room_code):
     for player_id, player_data in room['players'].items():
         players_list.append({
             'player_id': player_id,
-            'name': player_data['name'],
+            'name': sanitize_input(player_data.get('name', ''), max_length=12),  # Sanitize for XSS protection
             'costume_uploaded': player_data['costume_uploaded']
         })
     
@@ -197,7 +253,7 @@ def get_costumes(room_code):
         
         # Get player name from players dict
         if player_id and player_id in room['players']:
-            player_name = room['players'][player_id].get('name')
+            player_name = sanitize_input(room['players'][player_id].get('name', ''), max_length=12)  # Sanitize for XSS protection
         
         # Create costume object with name
         costume_with_name = costume.copy()
@@ -262,7 +318,7 @@ def get_leaderboard(room_code):
     # Loop through costumes, for each costume find the player's name and image
     for costume in room['costumes']:
         player_id = costume['player_id']
-        player_name = room['players'][player_id]['name']
+        player_name = sanitize_input(room['players'][player_id].get('name', ''), max_length=12)  # Sanitize for XSS protection
         image_data = costume.get('image_data', '')
         
         leaderboard.append({
