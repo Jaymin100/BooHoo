@@ -306,7 +306,7 @@ def costume_image():
 
 @app.route('/api/leaderboard/<room_code>', methods=['GET'])
 def get_leaderboard(room_code):
-    """Builds the leaderboard and send it to the frontend"""
+    """Builds the leaderboard and send it to the frontend, then deletes the room from memory"""
     # Check room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
@@ -330,6 +330,10 @@ def get_leaderboard(room_code):
     
     # Sort by votes (highest first)
     leaderboard = sorted(leaderboard, key=lambda x: x['votes'], reverse=True)
+    
+    # Delete the room from memory immediately after building leaderboard
+    # This ensures the room data is cleaned up as soon as results are sent
+    del games[room_code]
     
     return jsonify({'leaderboard': leaderboard})
 
