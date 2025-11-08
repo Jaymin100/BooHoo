@@ -15,22 +15,23 @@ function Home() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/join', {
+      // Send room_code (lowercase with underscore) to match backend expectation
+      const response = await fetch('http://localhost:5000/api/verifiy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ RoomCode: roomCode }),
+        body: JSON.stringify({ room_code: roomCode }),
       });
       
       const data = await response.json();
       
-      if (response.ok) {
-        // Step 4: Navigate to /join-room page after successful join
-        // navigate('/join-room') changes the URL to url.com/join-room
+      if (response.ok && data.success) {
+        // Step 4: Navigate to /join-room page after successful verification
         navigate(`/join-room?code=${roomCode}`);
       } else {
-        alert('Error: ' + data.message);
+        // Show error message from backend
+        alert('Error: ' + (data.error || 'Room not found'));
       }
     } catch (error) {
       console.error('Error:', error);
