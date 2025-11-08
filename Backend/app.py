@@ -179,7 +179,10 @@ def get_costumes(room_code):
     1. Check if room exists
     2. Return the costumes list from games[room_code]['costumes']
     """
-
+    # Check if room exists
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    
     return jsonify(games[room_code]['costumes'])
 
 @app.route('/api/upload', methods=['POST'])
