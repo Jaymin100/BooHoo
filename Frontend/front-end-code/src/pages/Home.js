@@ -15,7 +15,7 @@ function Home() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/join-room', {
+      const response = await fetch('http://localhost:5000/api/join', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,7 +43,7 @@ function Home() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/create-room', {
+      const response = await fetch('http://localhost:5000/api/create_room', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
