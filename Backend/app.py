@@ -4,7 +4,6 @@ import random as rd
 import uuid
 import os
 
-
 app = Flask(__name__)
 CORS(app)
 
@@ -16,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 games = {}
 
 def generate_room_code():
-    """Generate a 6-digit room code"""
+    """Generate a 6-digit random room code"""
     code = ''.join([str(rd.randint(0, 9)) for _ in range(6)])
     # Make sure it's unique
     while code in games:
@@ -68,7 +67,6 @@ def join_room():
         "has_finished_voting": False
     }
 
-    
     # 5. For now, skip image saving, but add a placeholder costume
     costume_id = str(uuid.uuid4())
     games[room_code]['costumes'].append({
@@ -202,7 +200,7 @@ def get_costumes(room_code):
 
 @app.route('/api/submit_votes', methods=['POST'])
 def submit_votes():
-  
+    """Tracks who have voteded and add together votes per costume"""
     data = request.get_json()
     room_code = data['room_code']
     player_id = data['player_id']
@@ -218,7 +216,6 @@ def submit_votes():
         costume_id = costume['costume_id']
         if costume_id in votes:
             costume['votes'] += votes[costume_id]
-    
     
     # Mark player as finished voting
     games[room_code]['players'][player_id]["has_finished_voting"] = True
