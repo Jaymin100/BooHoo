@@ -107,7 +107,7 @@ def debug_page():
         </style>
     </head>
     <body>
-        <h1>🎮 Games Debug View</h1>
+        <h1>Games Debug View</h1>
         <div class="info">View all active games/rooms in memory</div>
         <button onclick="location.reload()">Refresh</button>
         <button onclick="fetch('/api/debug/rooms').then(r => r.json()).then(d => { document.getElementById('data').textContent = JSON.stringify(d, null, 2); })">Load Data</button>
