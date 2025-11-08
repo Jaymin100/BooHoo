@@ -15,7 +15,7 @@ function Home() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/join-room', {
+      const response = await fetch('http://localhost:5000/api/join', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,7 +43,7 @@ function Home() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/create-room', {
+      const response = await fetch('http://localhost:5000/api/create_room', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,12 +52,11 @@ function Home() {
       });
       
       const data = await response.json();
-      
-      if (response.ok) {
 
-        const roomCode = data.code;
+      if (response.ok) {
+        console.log(data.room_code);
         // Step 6: Navigate to /room page after successful room creation
-        navigate(`/room?code=${roomCode}`);
+        navigate(`/room?code=${data.room_code}`);
       } else {
         alert('Error: ' + data.message);
       }
