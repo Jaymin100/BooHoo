@@ -4,7 +4,6 @@ import random as rd
 import uuid
 import os
 
-
 app = Flask(__name__)
 CORS(app)
 
@@ -219,7 +218,6 @@ def submit_votes():
         if costume_id in votes:
             costume['votes'] += votes[costume_id]
     
-    
     # Mark player as finished voting
     games[room_code]['players'][player_id]["has_finished_voting"] = True
     
@@ -232,7 +230,6 @@ def costume_image():
     img_b64 = data['image']  # this is your base64 string from JS
 
     return {"status": "success"}, img_b64
-
     
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
