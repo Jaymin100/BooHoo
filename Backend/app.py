@@ -31,6 +31,7 @@ def create_room():
     games[room_code] = {
         'room_code': room_code,
         'status': 'waiting',
+        'host_id':'',
         'players': {},
         'costumes': []
     }
@@ -54,6 +55,9 @@ def join_room():
     # 3. Generate player_id
     player_id = str(uuid.uuid4())
     
+    if games[room_code]['host_id'] == '':
+        games[room_code]['host_id'] = player_id
+
     # 4. Add player to games[room_code]['players']
     games[room_code]['players'][player_id] = {
         "name": player_name,
@@ -84,22 +88,25 @@ def debug_games():
 
 @app.route('/api/room/<room_code>', methods=['GET'])
 def get_room(room_code):
-    """
-    Get information about a room.
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
     
-    Returns:
-    - room_code
-    - status
-    - list of players
+    room = games[room_code]
     
-    YOUR TASK:
-    1. Check if room exists - return 404 if not
-    2. Get the room data from games[room_code]
-    3. Format the players dictionary into a list
-    4. Return JSON
-    """
+    # Convert players dict to list
+    players_list = []
+    for player_id, player_data in room['players'].items():
+        players_list.append({
+            'player_id': player_id,
+            'name': player_data['name'],
+            'costume_uploaded': player_data['costume_uploaded']
+        })
     
-    pass
+    return jsonify({
+        'room_code': room_code,
+        'status': room['status'],
+        'players': players_list
+    })
 
 @app.route('/api/verifiy',  methods=['POST'])
 def room_exists():

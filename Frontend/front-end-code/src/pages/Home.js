@@ -26,9 +26,9 @@ function Home() {
       const data = await response.json();
       
       if (response.ok) {
-        // Step 4: Navigate to /room page after successful join
-        // navigate('/room') changes the URL to url.com/room
-        navigate(`/room?code=${roomCode}`);
+        // Step 4: Navigate to /join-room page after successful join
+        // navigate('/join-room') changes the URL to url.com/join-room
+        navigate(`/join-room?code=${roomCode}`);
       } else {
         alert('Error: ' + data.message);
       }
@@ -55,8 +55,8 @@ function Home() {
 
       if (response.ok) {
         console.log(data.room_code);
-        // Step 6: Navigate to /room page after successful room creation
-        navigate(`/room?code=${data.room_code}`);
+        // Step 6: Navigate to /join-room page after successful room creation
+        navigate(`/join-room?code=${data.room_code}`);
       } else {
         alert('Error: ' + data.message);
       }
