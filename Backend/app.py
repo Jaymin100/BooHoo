@@ -1,7 +1,6 @@
 import random as rd
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import random
 import uuid
 import os
 import base64
@@ -73,6 +72,7 @@ def create_room():
     
     return jsonify({'success': True, 'room_code': room_code})
 
+#expects user in phase 2
 @app.route('/api/join', methods=['POST'])
 def join_room():
     data = request.get_json()
@@ -95,6 +95,7 @@ def join_room():
         "costume_uploaded": False,  # Changed to False since we're not saving images yet
         "has_finished_voting": False
     }
+
     
     # 5. For now, skip image saving, but add a placeholder costume
     costume_id = str(uuid.uuid4())
@@ -104,12 +105,44 @@ def join_room():
         "filename": "",  # Empty for now
         "votes": 0
     })
-    
+
     # 6. Return success
     return jsonify({
         'success': True,
         'player_id': player_id
     })
 
+@app.route('/api/debug/rooms', methods=['GET'])
+def debug_games():
+    """Shows all games in memory - useful for debugging"""
+    return jsonify(games)
+
+@app.route('/api/room/<room_code>', methods=['GET'])
+def get_room(room_code):
+    """
+    Get information about a room.
+    
+    Returns:
+    - room_code
+    - status
+    - list of players
+    
+    YOUR TASK:
+    1. Check if room exists - return 404 if not
+    2. Get the room data from games[room_code]
+    3. Format the players dictionary into a list
+    4. Return JSON
+    """
+    
+    pass
+
+@app.route('/api/verifiy',  methods=['POST'])
+def room_exists():
+    data = request.get_json()
+    room_code = data['room_code']
+    if room_code not in games:
+        return jsonify({'success': False, 'error': 'Room not found'}), 404
+    return jsonify({'success': True})
+    
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
