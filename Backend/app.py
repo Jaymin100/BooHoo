@@ -4,7 +4,8 @@ import random as rd
 import uuid
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow requests from ngrok and any origin
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # In-memory storage
 games = {}
@@ -289,4 +290,5 @@ def delete_room(room_code):
     
     return jsonify({'success': True})
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Run on all interfaces (0.0.0.0) to allow ngrok to connect
+    app.run(debug=True, host='0.0.0.0', port=5000)

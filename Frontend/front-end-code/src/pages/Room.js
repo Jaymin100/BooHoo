@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Waiting from '../RoomComp/Waiting';
 import Playing from '../RoomComp/Playing';
 import Finished from '../RoomComp/Finished';
+import API_BASE_URL from '../config/api';
 
 // Room page component - displays different components based on room status
 function Room() {
@@ -23,7 +24,11 @@ function Room() {
     // Fetch room data to get status
     const fetchRoomStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/room/${roomCode}`);
+        const response = await fetch(`${API_BASE_URL}/api/room/${roomCode}`, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setRoomStatus(data.status || 'waiting');

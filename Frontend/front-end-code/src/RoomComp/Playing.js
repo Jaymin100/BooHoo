@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import API_BASE_URL from '../config/api';
 
 // Playing component - allows users to swipe through costumes and vote
 function Playing({ roomCode, playerId }) {
@@ -22,7 +22,11 @@ function Playing({ roomCode, playerId }) {
   useEffect(() => {
     const fetchCostumes = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/costumes/${roomCode}`);
+        const response = await fetch(`${API_BASE_URL}/api/costumes/${roomCode}`, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           // Filter out the current player's costume
@@ -44,7 +48,7 @@ function Playing({ roomCode, playerId }) {
   }, [roomCode, playerId]);
 
   // Handle swipe left (no vote / skip)
-  const handleSwipeLeft = () => {
+  const handleSwipeLeft = useCallback(() => {
     if (currentIndex < costumes.length) {
       const currentCostume = costumes[currentIndex];
       // Set vote to 0 for this costume
@@ -60,10 +64,10 @@ function Playing({ roomCode, playerId }) {
         setCurrentIndex(prev => prev + 1);
       }, 300);
     }
-  };
+  }, [currentIndex, costumes]);
 
   // Handle swipe right (vote / like)
-  const handleSwipeRight = () => {
+  const handleSwipeRight = useCallback(() => {
     if (currentIndex < costumes.length) {
       const currentCostume = costumes[currentIndex];
       // Set vote to 1 for this costume
@@ -79,7 +83,7 @@ function Playing({ roomCode, playerId }) {
         setCurrentIndex(prev => prev + 1);
       }, 300);
     }
-  };
+  }, [currentIndex, costumes]);
 
   // Mouse event handlers for desktop drag
   const handleMouseDown = (e) => {
@@ -144,7 +148,7 @@ function Playing({ roomCode, playerId }) {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, handleSwipeLeft, handleSwipeRight]);
 
   // Touch event handlers for mobile swipe gestures
   const handleTouchStart = (e) => {
@@ -204,19 +208,8 @@ function Playing({ roomCode, playerId }) {
   // Note: Room component polls for status updates, so when status changes to 'finished',
   // it will automatically show the Finished component. No need to poll here.
 
-  // Submit votes when all costumes are viewed
-  useEffect(() => {
-    if (currentIndex >= costumes.length && costumes.length > 0 && !submitting && !submitSuccess) {
-      // Wait a moment to ensure votes state is updated, then submit
-      const timer = setTimeout(() => {
-        submitVotes();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [currentIndex, costumes.length, submitting, submitSuccess]);
-
   // Submit votes to backend
-  const submitVotes = async () => {
+  const submitVotes = useCallback(async () => {
     setSubmitting(true);
     try {
       // Ensure all costumes have votes (default to 0 if not voted)
@@ -225,10 +218,11 @@ function Playing({ roomCode, playerId }) {
         allVotes[costume.costume_id] = votes[costume.costume_id] ?? 0;
       });
 
-      const response = await fetch('http://localhost:5000/api/submit_votes', {
+      const response = await fetch(`${API_BASE_URL}/api/submit_votes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({
           room_code: roomCode,
@@ -249,7 +243,18 @@ function Playing({ roomCode, playerId }) {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [roomCode, playerId, costumes, votes]);
+
+  // Submit votes when all costumes are viewed
+  useEffect(() => {
+    if (currentIndex >= costumes.length && costumes.length > 0 && !submitting && !submitSuccess) {
+      // Wait a moment to ensure votes state is updated, then submit
+      const timer = setTimeout(() => {
+        submitVotes();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentIndex, costumes.length, submitting, submitSuccess, submitVotes]);
 
   // Loading state
   if (loading) {

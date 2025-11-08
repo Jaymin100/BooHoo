@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 // CreateRoom page - shows player list and start button for room host
 function CreateRoom() {
@@ -20,7 +21,11 @@ function CreateRoom() {
 
     const fetchRoomData = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/room/${roomCode}`);
+        const response = await fetch(`${API_BASE_URL}/api/room/${roomCode}`, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setPlayers(data.players || []);
@@ -50,8 +55,11 @@ function CreateRoom() {
 
     setStarting(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/start_game/${roomCode}`, {
+      const response = await fetch(`${API_BASE_URL}/api/start_game/${roomCode}`, {
         method: 'POST',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
       });
 
       if (response.ok) {

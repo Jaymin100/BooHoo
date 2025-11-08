@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 // Home page component - this is your main landing page (url.com/)
 function Home() {
@@ -16,10 +17,11 @@ function Home() {
     
     try {
       // Send room_code (lowercase with underscore) to match backend expectation
-      const response = await fetch('http://localhost:5000/api/verifiy', {
+      const response = await fetch(`${API_BASE_URL}/api/verifiy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({ room_code: roomCode }),
       });
@@ -44,10 +46,11 @@ function Home() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/create_room', {
+      const response = await fetch(`${API_BASE_URL}/api/create_room`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({}),
       });

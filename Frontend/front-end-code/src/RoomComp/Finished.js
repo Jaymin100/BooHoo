@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import API_BASE_URL from '../config/api';
 
 // Finished component - displays leaderboard with top 3 players
 function Finished({ roomCode }) {
@@ -9,7 +10,11 @@ function Finished({ roomCode }) {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/leaderboard/${roomCode}`);
+        const response = await fetch(`${API_BASE_URL}/api/leaderboard/${roomCode}`, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setLeaderboard(data.leaderboard || []);
@@ -38,11 +43,6 @@ function Finished({ roomCode }) {
 
   // Get top 3 players
   const top3 = leaderboard.slice(0, 3);
-  const medals = ['🥇', '🥈', '🥉'];
-  const positions = ['1st', '2nd', '3rd'];
-  
-  // Podium heights for visual effect (1st tallest, 2nd medium, 3rd shortest)
-  const podiumHeights = ['h-48', 'h-36', 'h-28'];
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 py-8">

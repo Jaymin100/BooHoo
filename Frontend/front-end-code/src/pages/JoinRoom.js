@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 // Join Room page component - allows user to upload photo and enter name to join a room
 function JoinRoom() {
@@ -124,10 +125,11 @@ function JoinRoom() {
       }
 
       // Step 8: Send POST request to backend
-      const response = await fetch('http://localhost:5000/api/join', {
+      const response = await fetch(`${API_BASE_URL}/api/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify(payload),
       });
