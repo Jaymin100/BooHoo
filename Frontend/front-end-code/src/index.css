@@ -2,3 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Simple ghost animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes blink {
+  0%, 90%, 100% {
+    height: 14px;
+  }
+  95% {
+    height: 1px;
+  }
+}
+
+
+/* Apply animations */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: blink 4s ease-in-out infinite;
+}
+
+
