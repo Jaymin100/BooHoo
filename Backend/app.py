@@ -2,14 +2,9 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import random as rd
 import uuid
-import os
 
 app = Flask(__name__)
 CORS(app)
-
-# Configuration
-UPLOAD_FOLDER = './uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # In-memory storage
 games = {}
@@ -47,8 +42,7 @@ def join_room():
     # 1. Extract room_code, player_name from data
     room_code = data['room_code']
     player_name = data['player_name']
-    image_data = data['image_data']
-    # image_data = data['image_data']  # Save for later
+    image_data = data.get('image_data', None)  # Make image_data optional
     
     # 2. Check if room exists
     if room_code not in games:
@@ -57,30 +51,42 @@ def join_room():
     # 3. Generate player_id
     player_id = str(uuid.uuid4())
     
+    # 4. Check if this is the first player (host) - set host_id if empty
+    # This must be done BEFORE adding the player to avoid race conditions
+    is_host = False
     if games[room_code]['host_id'] == '':
         games[room_code]['host_id'] = player_id
+        is_host = True
+    else:
+        # Check if this player is already the host (shouldn't happen but just in case)
+        is_host = games[room_code]['host_id'] == player_id
 
-    # 4. Add player to games[room_code]['players']
+    # 5. Add player to games[room_code]['players']
     games[room_code]['players'][player_id] = {
         "name": player_name,
-        "costume_uploaded": False,  # Changed to False since we're not saving images yet
+        "costume_uploaded": image_data is not None,  # True if image was provided
         "has_finished_voting": False
     }
 
-    # 5. For now, skip image saving, but add a placeholder costume
+    # 6. Add costume entry
     costume_id = str(uuid.uuid4())
     games[room_code]['costumes'].append({
         "costume_id": costume_id,
         "player_id": player_id,
         "filename": "",  # Empty for now
         "votes": 0,
-        "image_data": image_data
+        "image_data": image_data if image_data else ""
     })
 
-    # 6. Return success
+    # 7. Double-check host status (should already be set above, but verify)
+    # This ensures we return the correct host status
+    final_is_host = games[room_code]['host_id'] == player_id
+    
+    # 8. Return success with host status
     return jsonify({
         'success': True,
-        'player_id': player_id
+        'player_id': player_id,
+        'is_host': final_is_host
     })
 
 @app.route('/api/debug/rooms', methods=['GET'])
@@ -147,6 +153,7 @@ def get_room(room_code):
     return jsonify({
         'room_code': room_code,
         'status': room['status'],
+        'host_id': room.get('host_id', ''),
         'players': players_list
     })
 
@@ -232,7 +239,7 @@ def costume_image():
 
 @app.route('/api/leaderboard/<room_code>', methods=['GET'])
 def get_leaderboard(room_code):
-    
+    """Builds the leaderboard and send it to the frontend"""
     # Check room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
