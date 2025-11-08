@@ -46,6 +46,7 @@ def join_room():
     # 1. Extract room_code, player_name from data
     room_code = data['room_code']
     player_name = data['player_name']
+    image_data = data['image_data']
     # image_data = data['image_data']  # Save for later
     
     # 2. Check if room exists
@@ -85,6 +86,44 @@ def join_room():
 def debug_games():
     """Shows all games in memory - useful for debugging"""
     return jsonify(games)
+
+@app.route('/debug', methods=['GET'])
+def debug_page():
+    """Simple HTML page to view games in a readable format"""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Games Debug View</title>
+        <style>
+            body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+            pre { background: #2a2a2a; padding: 15px; border-radius: 5px; overflow-x: auto; }
+            button { padding: 10px 20px; margin: 10px 0; background: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; }
+            button:hover { background: #45a049; }
+            .info { color: #4CAF50; margin-bottom: 10px; }
+        </style>
+    </head>
+    <body>
+        <h1>🎮 Games Debug View</h1>
+        <div class="info">View all active games/rooms in memory</div>
+        <button onclick="location.reload()">Refresh</button>
+        <button onclick="fetch('/api/debug/rooms').then(r => r.json()).then(d => { document.getElementById('data').textContent = JSON.stringify(d, null, 2); })">Load Data</button>
+        <pre id="data">Click "Load Data" to view games...</pre>
+        <script>
+            // Auto-load on page load
+            fetch('/api/debug/rooms')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('data').textContent = JSON.stringify(d, null, 2);
+                })
+                .catch(e => {
+                    document.getElementById('data').textContent = 'Error: ' + e.message;
+                });
+        </script>
+    </body>
+    </html>
+    """
+    return html
 
 @app.route('/api/room/<room_code>', methods=['GET'])
 def get_room(room_code):
