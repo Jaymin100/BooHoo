@@ -111,8 +111,8 @@ def room_exists():
 
 
 
-@app.route('/upload', methods=['POST'])
-def upload_image():
+@app.route('/api/upload', methods=['POST'])
+def costume_image():
     data = request.get_json()
     img_b64 = data['image']  # this is your base64 string from JS
 
