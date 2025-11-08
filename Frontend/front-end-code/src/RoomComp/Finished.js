@@ -57,65 +57,14 @@ function Finished({ roomCode }) {
 
         {/* Top 3 Podium Display */}
         {top3.length > 0 ? (
-          <div className="flex items-end justify-center gap-4 mb-12 flex-wrap">
-            {/* Render in order: 2nd, 1st, 3rd for visual podium effect */}
-            {/* Only show positions that have players */}
-            {top3.length >= 2 && top3[1] && (
-              <div
-                key={top3[1].player_id}
-                className="flex flex-col items-center"
-                style={{ flex: top3.length === 3 ? '1' : '0 1 auto', maxWidth: '300px', minWidth: '200px' }}
-              >
-                {/* Medal */}
-                <div className="text-6xl mb-4">🥈</div>
-                
-                {/* Player Card */}
-                <div className="bg-gray-900 rounded-2xl border-2 border-orange-600/30 p-6 w-full shadow-2xl">
-                  {/* Player Photo */}
-                  <div className="h-36 w-full rounded-xl overflow-hidden mb-4 bg-black flex items-center justify-center">
-                    {top3[1].image_data ? (
-                      <img
-                        src={top3[1].image_data}
-                        alt={top3[1].player_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-orange-400/50 text-lg">No Photo</div>
-                    )}
-                  </div>
-                  
-                  {/* Player Name */}
-                  <h2 className="text-2xl font-bold text-orange-400 text-center mb-2">
-                    {top3[1].player_name}
-                  </h2>
-                  
-                  {/* Position */}
-                  <p className="text-orange-500/70 text-sm text-center mb-3 uppercase tracking-wide">
-                    2nd Place
-                  </p>
-                  
-                  {/* Votes/Likes */}
-                  <div className="text-center">
-                    <div className="inline-flex items-center space-x-2 bg-orange-600/20 px-4 py-2 rounded-full">
-                      <span className="text-orange-400 text-2xl">❤️</span>
-                      <span className="text-orange-300 text-xl font-bold">
-                        {top3[1].votes}
-                      </span>
-                      <span className="text-orange-400/70 text-sm">
-                        {top3[1].votes === 1 ? 'like' : 'likes'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
+          <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-4 mb-12">
+            {/* Render in order: 1st, 2nd, 3rd for mobile, podium order for desktop */}
             {/* 1st Place (Center - Tallest) */}
             {top3[0] && (
               <div
                 key={top3[0].player_id}
-                className="flex flex-col items-center transform -translate-y-4"
-                style={{ flex: top3.length === 3 ? '1' : '0 1 auto', maxWidth: '300px', minWidth: '200px' }}
+                className="flex flex-col items-center order-1 md:order-2 md:transform md:-translate-y-4"
+                style={{ flex: top3.length === 3 ? '1' : '0 1 auto', maxWidth: '300px', minWidth: '200px', width: '100%' }}
               >
                 {/* Medal */}
                 <div className="text-6xl mb-4">🥇</div>
@@ -161,12 +110,63 @@ function Finished({ roomCode }) {
               </div>
             )}
             
-            {/* 3rd Place (Right) */}
+            {/* Only show positions that have players */}
+            {top3.length >= 2 && top3[1] && (
+              <div
+                key={top3[1].player_id}
+                className="flex flex-col items-center order-2 md:order-1"
+                style={{ flex: top3.length === 3 ? '1' : '0 1 auto', maxWidth: '300px', minWidth: '200px', width: '100%' }}
+              >
+                {/* Medal */}
+                <div className="text-6xl mb-4">🥈</div>
+                
+                {/* Player Card */}
+                <div className="bg-gray-900 rounded-2xl border-2 border-orange-600/30 p-6 w-full shadow-2xl">
+                  {/* Player Photo */}
+                  <div className="h-36 w-full rounded-xl overflow-hidden mb-4 bg-black flex items-center justify-center">
+                    {top3[1].image_data ? (
+                      <img
+                        src={top3[1].image_data}
+                        alt={top3[1].player_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-orange-400/50 text-lg">No Photo</div>
+                    )}
+                  </div>
+                  
+                  {/* Player Name */}
+                  <h2 className="text-2xl font-bold text-orange-400 text-center mb-2">
+                    {top3[1].player_name}
+                  </h2>
+                  
+                  {/* Position */}
+                  <p className="text-orange-500/70 text-sm text-center mb-3 uppercase tracking-wide">
+                    2nd Place
+                  </p>
+                  
+                  {/* Votes/Likes */}
+                  <div className="text-center">
+                    <div className="inline-flex items-center space-x-2 bg-orange-600/20 px-4 py-2 rounded-full">
+                      <span className="text-orange-400 text-2xl">❤️</span>
+                      <span className="text-orange-300 text-xl font-bold">
+                        {top3[1].votes}
+                      </span>
+                      <span className="text-orange-400/70 text-sm">
+                        {top3[1].votes === 1 ? 'like' : 'likes'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 3rd Place */}
             {top3.length >= 3 && top3[2] && (
               <div
                 key={top3[2].player_id}
-                className="flex flex-col items-center"
-                style={{ flex: '1', maxWidth: '300px', minWidth: '200px' }}
+                className="flex flex-col items-center order-3"
+                style={{ flex: '1', maxWidth: '300px', minWidth: '200px', width: '100%' }}
               >
                 {/* Medal */}
                 <div className="text-6xl mb-4">🥉</div>
