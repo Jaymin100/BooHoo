@@ -232,7 +232,17 @@ def submit_votes():
     # Mark player as finished voting
     games[room_code]['players'][player_id]["has_finished_voting"] = True
     
-    return jsonify({'success': True})
+    # Check if all players have finished voting
+    all_finished = all(
+        player_data.get("has_finished_voting", False)
+        for player_data in games[room_code]['players'].values()
+    )
+    
+    # If all players have finished, change room status to 'finished'
+    if all_finished:
+        games[room_code]['status'] = 'finished'
+    
+    return jsonify({'success': True, 'all_finished': all_finished})
 
 @app.route('/api/upload', methods=['POST'])
 def costume_image():
@@ -252,16 +262,18 @@ def get_leaderboard(room_code):
     room = games[room_code]
     leaderboard = []
     
-    # Build leaderboard
-    # Hint: Loop through costumes, for each costume find the player's name
+    # Build leaderboard with image_data included
+    # Loop through costumes, for each costume find the player's name and image
     for costume in room['costumes']:
         player_id = costume['player_id']
         player_name = room['players'][player_id]['name']
+        image_data = costume.get('image_data', '')
         
         leaderboard.append({
             'player_id': player_id,
             'player_name': player_name,
-            'votes': costume['votes']
+            'votes': costume['votes'],
+            'image_data': image_data
         })
     
     # Sort by votes (highest first)

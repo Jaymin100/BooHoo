@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Waiting from '../RoomComp/Waiting';
 import Playing from '../RoomComp/Playing';
+import Finished from '../RoomComp/Finished';
 
 // Room page component - displays different components based on room status
 function Room() {
@@ -41,9 +42,10 @@ function Room() {
 
     fetchRoomStatus();
 
-    // Optionally: Set up polling to check status every few seconds
-    // const interval = setInterval(fetchRoomStatus, 3000);
-    // return () => clearInterval(interval);
+    // Poll for status updates when game is playing or waiting
+    // This allows automatic transition to 'finished' status when all players vote
+    const interval = setInterval(fetchRoomStatus, 2000);
+    return () => clearInterval(interval);
   }, [roomCode, navigate]);
 
   // Show loading state
@@ -66,7 +68,12 @@ function Room() {
     return <Playing roomCode={roomCode} playerId={playerId} />;
   }
 
-  // Placeholder for other statuses (will be implemented later)
+  // Show Finished component when status is 'finished'
+  if (roomStatus === 'finished') {
+    return <Finished roomCode={roomCode} />;
+  }
+
+  // Placeholder for other statuses
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       <div className="text-orange-500 text-xl">

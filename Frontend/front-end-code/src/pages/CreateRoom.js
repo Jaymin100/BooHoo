@@ -43,8 +43,8 @@ function CreateRoom() {
 
   // Handle start game
   const handleStartGame = async () => {
-    if (players.length <= 3) {
-      alert('You need more than 3 players to start the game!');
+    if (players.length <= 2) {
+      alert('You need more than 2 players to start the game!');
       return;
     }
 

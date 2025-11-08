@@ -201,6 +201,9 @@ function Playing({ roomCode, playerId }) {
     cardPositionRef.current = { x: 0, y: 0, rotate: 0 };
   }, [currentIndex]);
 
+  // Note: Room component polls for status updates, so when status changes to 'finished',
+  // it will automatically show the Finished component. No need to poll here.
+
   // Submit votes when all costumes are viewed
   useEffect(() => {
     if (currentIndex >= costumes.length && costumes.length > 0 && !submitting && !submitSuccess) {
