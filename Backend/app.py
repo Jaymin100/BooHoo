@@ -176,25 +176,7 @@ def start_game(room_code):
 
 @app.route('/api/costumes/<room_code>', methods=['GET'])
 def get_costumes(room_code):
-    """
-    Get all costumes in a room for voting.
-    
-    Returns: {
-        "costumes": [
-            {
-                "costume_id": "uuid1",
-                "player_id": "uuid-player-1",
-                "filename": "image.jpg",
-                "votes": 0
-            },
-            ...
-        ]
-    }
-    
-    YOUR TASK:
-    1. Check if room exists
-    2. Return the costumes list from games[room_code]['costumes']
-    """
+   
     # Check if room exists
     if room_code not in games:
         return jsonify({'success': False, 'error': 'Room not found'}), 404
